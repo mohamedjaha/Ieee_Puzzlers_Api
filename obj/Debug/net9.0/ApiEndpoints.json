@@ -1,0 +1,154 @@
+[
+  {
+    "ContainingType": "IEEE_Application.Controllers.AccountController",
+    "Method": "Login",
+    "RelativePath": "api/Account/Login",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "Login_user",
+        "Type": "IEEE_Application.DATA.DTO.LoginUser",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "IEEE_Application.Controllers.AccountController",
+    "Method": "RegisterNewUser",
+    "RelativePath": "api/Account/Register",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "NewUser",
+        "Type": "IEEE_Application.DATA.DTO.NewUserDTO",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "IEEE_Application.Controllers.PuzzelsController",
+    "Method": "CreatePuzzle",
+    "RelativePath": "api/Puzzels/CreatePuzzle",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "Name",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "Image",
+        "Type": "Microsoft.AspNetCore.Http.IFormFile",
+        "IsRequired": false
+      },
+      {
+        "Name": "Solution",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "DifficultyLevel",
+        "Type": "System.String",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "IEEE_Application.Controllers.PuzzelsController",
+    "Method": "GetAllPuzzles",
+    "RelativePath": "api/Puzzels/GetAllPuzzles",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "IEEE_Application.Controllers.PuzzelsController",
+    "Method": "GetPuzzleById",
+    "RelativePath": "api/Puzzels/GetPuzzleById",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "IEEE_Application.Controllers.TournamentController",
+    "Method": "CreateTournament",
+    "RelativePath": "api/Tournament/CreateTournament",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "tournament",
+        "Type": "IEEE_Application.DATA.DTO.TournamentDTO",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "IEEE_Application.Controllers.TournamentController",
+    "Method": "GetAllTournaments",
+    "RelativePath": "api/Tournament/GetAllTournaments",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "IEEE_Application.Controllers.TournamentController",
+    "Method": "GetTournamentById",
+    "RelativePath": "api/Tournament/GetTournamentById/{id}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "IEEE_Application.Controllers.TournamentPuzzleController",
+    "Method": "AddPuzzleToTournament",
+    "RelativePath": "api/TournamentPuzzle/AddPuzzleToTournament",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "tournamentId",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "puzzleId",
+        "Type": "System.Int32",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  }
+]
