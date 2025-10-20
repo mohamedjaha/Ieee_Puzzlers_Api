@@ -4,6 +4,7 @@
     {
         Task CreateAsync (T entity);
         Task<T?> GetByIdAsync (int id);
+        Task<T?> GetByIdAsync(string id);
         Task<T?> GetByNameAsync(string Name);
         Task<List<T>> GetAllAsync ();
         Task UpdateAsync (T entity);

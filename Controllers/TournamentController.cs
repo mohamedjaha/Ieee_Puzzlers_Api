@@ -20,13 +20,14 @@ namespace IEEE_Application.Controllers
             _unitOfWork = unitOfWork;
             _db = db;
         }
-
+        [Authorize]
         [HttpGet("GetAllTournaments")]
         public async Task<IActionResult> GetAllTournaments()
         {
             var tournaments = await _unitOfWork.RepoTournament.GetAllAsync();
             return Ok(tournaments);
         }
+        [Authorize]
         [HttpGet("GetTournamentById/{id}")]
         public async Task<IActionResult> GetTournamentById(int id)
         {

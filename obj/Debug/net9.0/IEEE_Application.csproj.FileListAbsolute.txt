@@ -172,3 +172,4 @@ C:\Users\ASUS\source\repos\IEEE_Application\IEEE_Application\obj\Debug\net9.0\re
 C:\Users\ASUS\source\repos\IEEE_Application\IEEE_Application\obj\Debug\net9.0\IEEE_Application.pdb
 C:\Users\ASUS\source\repos\IEEE_Application\IEEE_Application\obj\Debug\net9.0\IEEE_Application.genruntimeconfig.cache
 C:\Users\ASUS\source\repos\IEEE_Application\IEEE_Application\obj\Debug\net9.0\ref\IEEE_Application.dll
+C:\Users\ASUS\source\repos\IEEE_Application\IEEE_Application\obj\Debug\net9.0\IEEE_Application.sourcelink.json

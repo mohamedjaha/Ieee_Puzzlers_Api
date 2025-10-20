@@ -4,7 +4,8 @@ namespace IEEE_Application.Repository.Base
 {
     public interface IUnitOfWork
     {
-        IRepo<Puzzle> RepoPuzzle { get; set; }
+        ISpecialPuzzelRepository RepoPuzzle { get; set; }
         IRepo<Tournament> RepoTournament { get; set; }
+        IRepo<User> RepoUser { get; set; }
     }
 }

@@ -13,5 +13,7 @@ namespace IEEE_Application.DATA.DTO
         [Required]
         [RegularExpression("^(hard|medium|easy)$", ErrorMessage = "DifficultyLevel must be hard , medium or easy.")]
         public string DifficultyLevel { get; set; }
+        [Required]
+        public string CreatorId { get; set; }
     }
 }

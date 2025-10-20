@@ -36,6 +36,40 @@
         }
       }
     },
+    "/api/Account/GetAllUsers": {
+      "get": {
+        "tags": [
+          "Account"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/Account/DeleteUser/{id}": {
+      "delete": {
+        "tags": [
+          "Account"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/Account/Login": {
       "post": {
         "tags": [
@@ -79,7 +113,28 @@
         }
       }
     },
-    "/api/Puzzels/GetPuzzleById": {
+    "/api/Puzzels/GetPuzzlesByDifficultyLevel": {
+      "get": {
+        "tags": [
+          "Puzzels"
+        ],
+        "parameters": [
+          {
+            "name": "level",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/Puzzels/GetPuzzleById/{id}": {
       "get": {
         "tags": [
           "Puzzels"
@@ -87,7 +142,8 @@
         "parameters": [
           {
             "name": "id",
-            "in": "query",
+            "in": "path",
+            "required": true,
             "schema": {
               "type": "integer",
               "format": "int32"
@@ -129,6 +185,137 @@
             "required": true,
             "schema": {
               "pattern": "^(hard|medium|easy)$",
+              "type": "string"
+            }
+          },
+          {
+            "name": "CreatorId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "required": [
+                  "Image"
+                ],
+                "type": "object",
+                "properties": {
+                  "Image": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              },
+              "encoding": {
+                "Image": {
+                  "style": "form"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/Puzzels/DeletePuzzle/{id}": {
+      "delete": {
+        "tags": [
+          "Puzzels"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/Puzzels/GetPuzzelsByCreatorId/{CreatorId}": {
+      "get": {
+        "tags": [
+          "Puzzels"
+        ],
+        "parameters": [
+          {
+            "name": "CreatorId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/Puzzels/UpdatePuzzle": {
+      "put": {
+        "tags": [
+          "Puzzels"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "Name",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Solution",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "DifficultyLevel",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "pattern": "^(hard|medium|easy)$",
+              "type": "string"
+            }
+          },
+          {
+            "name": "CreatorId",
+            "in": "query",
+            "required": true,
+            "schema": {
               "type": "string"
             }
           }

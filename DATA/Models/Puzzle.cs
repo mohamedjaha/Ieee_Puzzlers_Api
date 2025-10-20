@@ -15,9 +15,12 @@ namespace IEEE_Application.DATA.Models
         [Required]
         [RegularExpression("^(hard|medium|easy)$", ErrorMessage = "DifficultyLevel must be hard , medium or easy.")]
         public string DifficultyLevel { get; set; }
+        [Required]
+        public string CreatorId { get; set; }
 
         //navigation properity 
         public ICollection<Tournament_Puzzle> TournamentPuzzles { get; set; }
+        public User Creator { get; set; }
 
 
     }

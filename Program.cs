@@ -20,7 +20,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 });
 
 builder.Services.AddScoped<IUnitOfWork, MainUnitOfWork>();
-
+builder.Services.AddScoped<ISpecialPuzzelRepository, SpecialPuzzelRepository>();
+builder.Services.AddMemoryCache();
 builder.Services.AddIdentity<User, IdentityRole>()
     .AddEntityFrameworkStores<AppDbContext>();
 
