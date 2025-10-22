@@ -1,19 +1,19 @@
 ﻿using IEEE_Application.DATA;
 using IEEE_Application.DATA.Models;
-using IEEE_Application.DATA.DTO;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using IEEE_Application.Repository.Base;
 using IEEE_Application.Repository;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Add essential services
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddAuthentication();
 
+// Connect to SQL Server
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
     options.UseSqlServer(builder.Configuration.GetConnectionString("Connection1"));
@@ -21,51 +21,62 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 builder.Services.AddScoped<IUnitOfWork, MainUnitOfWork>();
 
+// Add Identity
 builder.Services.AddIdentity<User, IdentityRole>()
-    .AddEntityFrameworkStores<AppDbContext>();
+    .AddEntityFrameworkStores<AppDbContext>()
+    .AddDefaultTokenProviders();
 
 var app = builder.Build();
 
-// ✅ Create default admin user at startup
+// ✅ STEP 1: Ensure database is created / migrated before using Identity
 using (var scope = app.Services.CreateScope())
 {
-    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
-    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-
-    string roleName = "ADMIN";
-    string userName = "root";
-    string password = "Root123?";
-
-    // Ensure role exists
-    if (!await roleManager.RoleExistsAsync(roleName))
+    var services = scope.ServiceProvider;
+    var db = services.GetRequiredService<AppDbContext>();
+    try
     {
-        await roleManager.CreateAsync(new IdentityRole(roleName));
-    }
+        // Apply migrations automatically
+        db.Database.Migrate();
 
-    // Ensure admin user exists
-    var user = await userManager.FindByNameAsync(userName);
-    if (user == null)
-    {
-        user = new User { UserName = userName };
-        var result = await userManager.CreateAsync(user, password);
+        // ✅ STEP 2: Create default role and admin user
+        var userManager = services.GetRequiredService<UserManager<User>>();
+        var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
 
-        if (result.Succeeded)
+        string roleName = "ADMIN";
+        string userName = "root";
+        string password = "Root123?";
+
+        // Create role if it doesn’t exist
+        if (!await roleManager.RoleExistsAsync(roleName))
+            await roleManager.CreateAsync(new IdentityRole(roleName));
+
+        // Create default admin user if not found
+        var user = await userManager.FindByNameAsync(userName);
+        if (user == null)
         {
-            await userManager.AddToRoleAsync(user, roleName);
+            user = new User { UserName = userName, Email = "root@example.com" };
+            var result = await userManager.CreateAsync(user, password);
+            if (result.Succeeded)
+                await userManager.AddToRoleAsync(user, roleName);
         }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine("❌ Database migration or seeding failed: " + ex.Message);
     }
 }
 
+// Swagger UI only in development
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "IEEE API V1");
-        c.RoutePrefix = string.Empty;
-    });
+        // maybe you removed or commented this line:
+        // c.RoutePrefix = string.Empty;
+    });  
 }
-
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
