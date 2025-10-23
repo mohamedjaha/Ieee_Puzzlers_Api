@@ -6,5 +6,6 @@ namespace IEEE_Application.DATA.Models
     {
         //navigation properity 
         public ICollection<Performance> Performances { get; set; }
+        public ICollection<Puzzle> CreatedPuzzles { get; set; }
     }
 }

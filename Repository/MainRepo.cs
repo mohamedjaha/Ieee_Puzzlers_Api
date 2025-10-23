@@ -1,4 +1,5 @@
 ﻿using IEEE_Application.DATA;
+using IEEE_Application.DATA.Models;
 using IEEE_Application.Repository.Base;
 using Microsoft.EntityFrameworkCore;
 
@@ -39,7 +40,15 @@ namespace IEEE_Application.Repository
         {
             if (id != null)
             {
-                return await (_Dbcontext.Set<T>().FindAsync(id));
+                return (await _Dbcontext.Set<T>().FindAsync(id));
+            }
+            return null;
+        }
+        public async Task<T?> GetByIdAsync(string id)
+        {
+            if (id != null)
+            {
+                return (await _Dbcontext.Set<T>().FindAsync(id));
             }
             return null;
         }

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -62,6 +63,46 @@ namespace IEEE_Application.Controllers
                 return BadRequest(ModelState);
             }
         }
+        [Authorize(Roles = "ADMIN")]
+        [HttpGet("GetAllUsers")]
+        public async Task<IActionResult> GetAllUsers()
+        {
+            var users = await _userManager.Users.ToListAsync();
+            var userList = new List<object>();
+            foreach (var user in users)
+            {
+                var roles = await _userManager.GetRolesAsync(user);
+                userList.Add(new
+                {
+                    user.Id,
+                    user.UserName,
+                    Roles = roles
+                });
+            }
+            return Ok(userList);
+        }
+        [Authorize(Roles = "ADMIN")]
+        [HttpDelete("DeleteUser/{id}")]
+        public async Task<IActionResult> DeleteUser(string id)
+        {
+            var user = await _userManager.FindByIdAsync(id);
+            if (user != null)
+            {
+                var result = await _userManager.DeleteAsync(user);
+                if (result.Succeeded)
+                {
+                    return Ok("User deleted successfully!");
+                }
+                else
+                {
+                    return BadRequest(result.Errors);
+                }
+            }
+            else
+            {
+                return NotFound("User not found!");
+            }
+        }
 
         [AllowAnonymous]
         [HttpPost("Login")]
@@ -115,5 +156,8 @@ namespace IEEE_Application.Controllers
                 return BadRequest(ModelState);
             }
         }
+        
+
     }
+
 }
