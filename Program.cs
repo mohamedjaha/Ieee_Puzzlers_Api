@@ -13,6 +13,18 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddAuthentication();
 
+// ✅ STEP 0: Add CORS configuration
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAngularClient", policy =>
+    {
+        policy.WithOrigins("http://localhost:4200") // your Angular dev server
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+// only if using cookies or auth headers
+    });
+});
+
 // Connect to SQL Server
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
@@ -35,7 +47,6 @@ using (var scope = app.Services.CreateScope())
     var db = services.GetRequiredService<AppDbContext>();
     try
     {
-        // Apply migrations automatically
         db.Database.Migrate();
 
         // ✅ STEP 2: Create default role and admin user
@@ -46,11 +57,9 @@ using (var scope = app.Services.CreateScope())
         string userName = "root";
         string password = "Root123?";
 
-        // Create role if it doesn’t exist
         if (!await roleManager.RoleExistsAsync(roleName))
             await roleManager.CreateAsync(new IdentityRole(roleName));
 
-        // Create default admin user if not found
         var user = await userManager.FindByNameAsync(userName);
         if (user == null)
         {
@@ -73,12 +82,16 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "IEEE API V1");
-        // maybe you removed or commented this line:
-        // c.RoutePrefix = string.Empty;
-    });  
+    });
 }
+
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
+
+// ✅ STEP 3: Apply the CORS policy BEFORE MapControllers()
+app.UseCors("AllowAngularClient");
+
 app.MapControllers();
+
 app.Run();
