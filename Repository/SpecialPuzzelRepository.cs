@@ -30,8 +30,8 @@ namespace IEEE_Application.Repository
                         .ToListAsync();
 
                     var cacheEntryOptions = new MemoryCacheEntryOptions()
-                        .SetSlidingExpiration(TimeSpan.FromSeconds(450))   
-                        .SetAbsoluteExpiration(TimeSpan.FromHours(6))
+                        .SetSlidingExpiration(TimeSpan.FromSeconds(45))   
+                        .SetAbsoluteExpiration(TimeSpan.FromHours(1))
                         .SetPriority(CacheItemPriority.High);
 
                     _memoryCache.Set(cacheKey, PuzzleByDifficultyLevel, cacheEntryOptions);
@@ -55,21 +55,22 @@ namespace IEEE_Application.Repository
             {
                 allPuzzles = await _dbContext.Puzzles.ToListAsync();
                 var cacheEntryOptions = new MemoryCacheEntryOptions()
-                    .SetSlidingExpiration(TimeSpan.FromSeconds(450))   
-                    .SetAbsoluteExpiration(TimeSpan.FromHours(6))
+                    .SetSlidingExpiration(TimeSpan.FromSeconds(45))   
+                    .SetAbsoluteExpiration(TimeSpan.FromHours(1))
                     .SetPriority(CacheItemPriority.High);
                 _memoryCache.Set(CacheKeyAll, allPuzzles, cacheEntryOptions);
             }
             return allPuzzles;
         }
+/*mochklkaaaaaaaaaaa*/
         public void clearPuzzelCache( string DifficultyLevel )
         {
             if ( DifficultyLevel == "hard" || DifficultyLevel == "medium" || DifficultyLevel == "easy" )
             {
                 var cacheKey = $"Puzzels{DifficultyLevel}";
                 _memoryCache.Remove(cacheKey);
-                _memoryCache.Remove(CacheKeyAll)
-            }
+                _memoryCache.Remove(CacheKeyAll);
+            }   
         }
     }
 }

@@ -90,9 +90,13 @@ namespace IEEE_Application.Controllers
                     Image = stream.ToArray(),
                     CreatorId = puzzle.CreatorId
                 };
+                
                 _unitOfWork.RepoPuzzle.CreateAsync(newPuzzle);
                 _unitOfWork.RepoPuzzle.clearPuzzelCache(puzzle.DifficultyLevel);
-                return Ok("Puzzle created successfully.");
+               
+                
+
+                return Ok("Puzzle created successfully.");//**************************************
             }
             return BadRequest(ModelState);
         }
@@ -151,6 +155,7 @@ namespace IEEE_Application.Controllers
             {
                 return BadRequest("Invalid creator ID ");
             }
+            
             using var stream = new MemoryStream();
             await puzzle.Image.CopyToAsync(stream);
             existingPuzzle.Name = puzzle.Name;

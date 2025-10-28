@@ -37,8 +37,9 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
-    options.UseSqlServer(builder.Configuration.GetConnectionString("Connection1"));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
+
 
 builder.Services.AddScoped<IUnitOfWork, MainUnitOfWork>();
 builder.Services.AddScoped<ISpecialPuzzelRepository, SpecialPuzzelRepository>();
