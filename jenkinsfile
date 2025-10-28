@@ -8,6 +8,12 @@ pipeline{
                 checkout scm
             }
         }
+        stage('Cleanup') {
+            steps {
+                sh 'docker compose down --remove-orphans'
+            }
+        }
+      
         stage('Build Docker Image') {
             steps {
                 sh 'docker compose build'
@@ -20,12 +26,7 @@ pipeline{
             }
         }
 
-  /*      stage('Cleanup') {
-            steps {
-                sh 'docker compose down --remove-orphans'
-            }
-        }
-        */
+
 
     }
     post{
