@@ -1,0 +1,39 @@
+pipeline{
+    agent any
+    
+    stages{
+        stage("checkout"){
+            steps{
+                echo "Checking out source code..."
+                checkout scm
+            }
+        }
+        stage('Build Docker Image') {
+            steps {
+                sh 'docker-compose build'
+            }
+        }
+
+        stage('Run Containers') {
+            steps {
+                sh 'docker-compose up -d'
+            }
+        }
+
+        stage('Cleanup') {
+            steps {
+                sh 'docker-compose down --remove-orphans'
+            }
+        }
+        
+
+    }
+    post{
+        success{
+            echo "Pipeline completed successfully!"
+        }
+        failure{
+            echo "Pipeline failed. Please check the logs."
+        }
+    }
+}
