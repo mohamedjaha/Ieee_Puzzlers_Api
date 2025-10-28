@@ -1,31 +1,40 @@
-﻿using IEEE_Application.DATA;
+﻿using System;
+using System.Text;
+using System.Threading.Tasks;
+using IEEE_Application.DATA;
 using IEEE_Application.DATA.Models;
+using IEEE_Application.Repository;
+using IEEE_Application.Repository.Base;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using IEEE_Application.Repository.Base;
-using IEEE_Application.Repository;
+using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add essential services
+
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddAuthentication();
 
-// ✅ STEP 0: Add CORS configuration
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAngularClient", policy =>
     {
-        policy.WithOrigins("http://localhost:4200") // your Angular dev server
+        policy.WithOrigins(
+                  "http://localhost:4200",
+                  "http://192.168.0.154:4200",
+                  "https://localhost:4200",
+                  "https://192.168.0.154:4200")
               .AllowAnyHeader()
               .AllowAnyMethod();
-// only if using cookies or auth headers
+
     });
 });
 
-// Connect to SQL Server
+
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
     options.UseSqlServer(builder.Configuration.GetConnectionString("Connection1"));
@@ -38,6 +47,46 @@ builder.Services.AddMemoryCache();
 builder.Services.AddIdentity<User, IdentityRole>()
     .AddEntityFrameworkStores<AppDbContext>()
     .AddDefaultTokenProviders();
+
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.Events.OnRedirectToLogin = context =>
+    {
+        context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+        return Task.CompletedTask;
+    };
+    options.Events.OnRedirectToAccessDenied = context =>
+    {
+        context.Response.StatusCode = StatusCodes.Status403Forbidden;
+        return Task.CompletedTask;
+    };
+});
+
+var jwtIssuer = builder.Configuration["JWT:Issuer"] ?? throw new InvalidOperationException("JWT:Issuer is not configured.");
+var jwtAudience = builder.Configuration["JWT:Audience"];
+var jwtSecret = builder.Configuration["JWT:SecretKey"] ?? throw new InvalidOperationException("JWT:SecretKey is not configured.");
+var validateAudience = !string.IsNullOrWhiteSpace(jwtAudience);
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.RequireHttpsMetadata = false;
+    options.SaveToken = true;
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = validateAudience,
+        ValidateIssuerSigningKey = true,
+        ValidateLifetime = true,
+        ValidIssuer = jwtIssuer,
+        ValidAudience = validateAudience ? jwtAudience : null,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)),
+    };
+});
 
 var app = builder.Build();
 
@@ -85,13 +134,13 @@ if (app.Environment.IsDevelopment())
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "IEEE API V1");
     });
 }
-
+// ✅ STEP 3: Apply the CORS policy BEFORE MapControllers()
+app.UseCors("AllowAngularClient");
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 
-// ✅ STEP 3: Apply the CORS policy BEFORE MapControllers()
-app.UseCors("AllowAngularClient");
+
 
 app.MapControllers();
 
