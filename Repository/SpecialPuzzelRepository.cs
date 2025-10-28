@@ -10,6 +10,7 @@ namespace IEEE_Application.Repository
     {
         private readonly AppDbContext _dbContext;
         private readonly IMemoryCache _memoryCache;
+        private readonly string CacheKeyAll = "AllPuzzles";
         public SpecialPuzzelRepository(AppDbContext Dbcontext , IMemoryCache memoryCache) : base(Dbcontext)
         {
             _dbContext = Dbcontext;
@@ -49,17 +50,26 @@ namespace IEEE_Application.Repository
 
         public async Task<List<Puzzle>> GetAllAsync()
         {
-            var cacheKey = "AllPuzzles";
-            if (!_memoryCache.TryGetValue(cacheKey, out List<Puzzle> allPuzzles))
+            
+            if (!_memoryCache.TryGetValue(CacheKeyAll, out List<Puzzle> allPuzzles))
             {
                 allPuzzles = await _dbContext.Puzzles.ToListAsync();
                 var cacheEntryOptions = new MemoryCacheEntryOptions()
                     .SetSlidingExpiration(TimeSpan.FromSeconds(450))   
                     .SetAbsoluteExpiration(TimeSpan.FromHours(6))
                     .SetPriority(CacheItemPriority.High);
-                _memoryCache.Set(cacheKey, allPuzzles, cacheEntryOptions);
+                _memoryCache.Set(CacheKeyAll, allPuzzles, cacheEntryOptions);
             }
             return allPuzzles;
+        }
+        public void clearPuzzelCache( string DifficultyLevel )
+        {
+            if ( DifficultyLevel == "hard" || DifficultyLevel == "medium" || DifficultyLevel == "easy" )
+            {
+                var cacheKey = $"Puzzels{DifficultyLevel}";
+                _memoryCache.Remove(cacheKey);
+                _memoryCache.Remove(CacheKeyAll)
+            }
         }
     }
 }

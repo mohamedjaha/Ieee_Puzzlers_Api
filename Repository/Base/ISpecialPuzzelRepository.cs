@@ -6,5 +6,6 @@ namespace IEEE_Application.Repository.Base
     {
         Task<List<Puzzle>> GetPuzzelsByDifficultyLevel (string DifficultyLevel);
         Task<List<Puzzle>> GetPuzzelsByCreatorId (string CreatorId);
+        public void clearPuzzelCache( string DifficultyLevel );
     }
 }

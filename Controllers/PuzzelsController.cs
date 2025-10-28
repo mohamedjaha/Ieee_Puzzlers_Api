@@ -91,6 +91,7 @@ namespace IEEE_Application.Controllers
                     CreatorId = puzzle.CreatorId
                 };
                 _unitOfWork.RepoPuzzle.CreateAsync(newPuzzle);
+                _unitOfWork.RepoPuzzle.clearPuzzelCache(puzzle.DifficultyLevel);
                 return Ok("Puzzle created successfully.");
             }
             return BadRequest(ModelState);
@@ -109,6 +110,7 @@ namespace IEEE_Application.Controllers
                 return NotFound("Puzzle not found.");
             }
             await _unitOfWork.RepoPuzzle.DeleteAsync(puzzle);
+            _unitOfWork.RepoPuzzle.clearPuzzelCache(puzzle.DifficultyLevel);
             return Ok("Puzzle deleted successfully.");
         }
         [Authorize(Roles = "PUZZLE_CREATOR")]
@@ -156,9 +158,13 @@ namespace IEEE_Application.Controllers
             existingPuzzle.Solution = puzzle.Solution;
             existingPuzzle.Image = stream.ToArray();
             existingPuzzle.CreatorId = puzzle.CreatorId;
-            await _unitOfWork.RepoPuzzle.DeleteAsync(existingPuzzle); // Assuming DeleteAsync also updates the entity
+            _unitOfWork.RepoPuzzle.clearPuzzelCache(puzzle.DifficultyLevel);
+
+            
             return Ok("Puzzle updated successfully.");
         }
+
+        
 
     }
 }
