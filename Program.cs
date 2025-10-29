@@ -18,22 +18,23 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAngularClient", policy =>
     {
         policy.WithOrigins(
-                  "http://localhost:4200",
-                  "http://192.168.0.154:4200",
-                  "https://localhost:4200",
-                  "https://192.168.0.154:4200")
-              .AllowAnyHeader()
-              .AllowAnyMethod();
-
+            "http://localhost:4200",
+            "http://192.168.0.154:4200",
+            "https://localhost:4200",
+            "https://192.168.0.154:4200",
+            "http://localhost:5173",
+            "https://localhost:5173",
+            "http://172.20.10.3:5173",
+            "https://172.20.10.3:5173")
+        .AllowAnyHeader()
+        .AllowAnyMethod();
     });
 });
-
 
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
