@@ -8,6 +8,8 @@ services:
     ports:
       - "1433:1433"
     restart: unless-stopped
+    volumes:
+      - sqlserverdata:/var/opt/mssql
   dotnetapi:
     build: .
     container_name: dotnetapi
@@ -16,6 +18,6 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
     restart: unless-stopped
-
+  
     ports:
       - "5000:5000"
