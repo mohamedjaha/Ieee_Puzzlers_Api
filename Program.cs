@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Text;
 using System.Threading.Tasks;
 using IEEE_Application.DATA;
@@ -13,31 +13,37 @@ using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// -------------------------------------------------------
+// ✅ SERVICES CONFIGURATION
+// -------------------------------------------------------
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// ✅ CORS — allow Angular frontend
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAngularClient", policy =>
     {
-policy.AllowAnyOrigin()
-        .AllowAnyHeader()
-        .AllowAnyMethod();
+        policy
+            .AllowAnyOrigin()
+            .AllowAnyHeader()
+            .AllowAnyMethod();
     });
 });
 
+// ✅ Database
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
 
-
 builder.Services.AddScoped<IUnitOfWork, MainUnitOfWork>();
 builder.Services.AddScoped<ISpecialPuzzelRepository, SpecialPuzzelRepository>();
 builder.Services.AddMemoryCache();
-// Add Identity
+
+// ✅ Identity
 builder.Services.AddIdentity<User, IdentityRole>()
     .AddEntityFrameworkStores<AppDbContext>()
     .AddDefaultTokenProviders();
@@ -56,7 +62,8 @@ builder.Services.ConfigureApplicationCookie(options =>
     };
 });
 
-var jwtIssuer = builder.Configuration["JWT:Issuer"] ?? throw new InvalidOperationException("JWT:Issuer is not configured.");
+// ✅ JWT Authentication
+var jwtIssuer = builder.Configuration["JWT:Issuer"] ?? "https://puzzlers-api";
 var jwtAudience = builder.Configuration["JWT:Audience"];
 var jwtSecret = builder.Configuration["JWT:SecretKey"] ?? throw new InvalidOperationException("JWT:SecretKey is not configured.");
 var validateAudience = !string.IsNullOrWhiteSpace(jwtAudience);
@@ -82,52 +89,71 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
+// -------------------------------------------------------
+// ✅ BUILD APP
+// -------------------------------------------------------
+
 var app = builder.Build();
 
-// ✅ STEP 1: Ensure database is created / migrated before using Identity
+// -------------------------------------------------------
+// ✅ INITIAL DB CHECK (optional retry loop)
+// -------------------------------------------------------
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
     var db = services.GetRequiredService<AppDbContext>();
-  try
-{
-    // 🔒 In production, assume DB already exists and is migrated
-    if (db.Database.CanConnect())
+    try
     {
-        Console.WriteLine("✅ Connected successfully to the existing database.");
+        int retries = 0;
+        const int maxRetries = 10;
+        const int delayMs = 5000;
 
-        // ✅ Optional: seed roles and admin user if they don’t exist
-        var userManager = services.GetRequiredService<UserManager<User>>();
-        var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
-
-        string roleName = "ADMIN";
-        string userName = "root";
-        string password = "Root123?";
-
-        if (!await roleManager.RoleExistsAsync(roleName))
-            await roleManager.CreateAsync(new IdentityRole(roleName));
-
-        var user = await userManager.FindByNameAsync(userName);
-        if (user == null)
+        while (!db.Database.CanConnect() && retries < maxRetries)
         {
-            user = new User { UserName = userName, Email = "root@example.com" };
-            var result = await userManager.CreateAsync(user, password);
-            if (result.Succeeded)
-                await userManager.AddToRoleAsync(user, roleName);
+            retries++;
+            Console.WriteLine($"⏳ Waiting for SQL Server... attempt {retries}/{maxRetries}");
+            Thread.Sleep(delayMs);
+        }
+
+        if (db.Database.CanConnect())
+        {
+            Console.WriteLine("✅ Connected successfully to the existing database.");
+
+            var userManager = services.GetRequiredService<UserManager<User>>();
+            var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
+
+            string roleName = "ADMIN";
+            string userName = "root";
+            string password = "Root123?";
+
+            if (!await roleManager.RoleExistsAsync(roleName))
+                await roleManager.CreateAsync(new IdentityRole(roleName));
+
+            var user = await userManager.FindByNameAsync(userName);
+            if (user == null)
+            {
+                user = new User { UserName = userName, Email = "root@example.com" };
+                var result = await userManager.CreateAsync(user, password);
+                if (result.Succeeded)
+                    await userManager.AddToRoleAsync(user, roleName);
+            }
+        }
+        else
+        {
+            Console.WriteLine("❌ Could not connect to DB after several attempts.");
         }
     }
-    else
+    catch (Exception ex)
     {
-        Console.WriteLine("⚠️ Warning: cannot connect to the database. Check connection string or credentials.");
+        Console.WriteLine("💥 Database initialization failed: " + ex.Message);
     }
 }
-catch (Exception ex)
-{
-    Console.WriteLine("❌ Database initialization failed: " + ex.Message);
-}
-}
 
-// Swagger UI only in development
+// -------------------------------------------------------
+// ✅ MIDDLEWARE ORDER (IMPORTANT!)
+// -------------------------------------------------------
+
+// ⚙️ Enable Swagger only in development
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -136,14 +162,13 @@ if (app.Environment.IsDevelopment())
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "IEEE API V1");
     });
 }
-// ✅ STEP 3: Apply the CORS policy BEFORE MapControllers()
+
+// ✅ Enable CORS BEFORE authentication/authorization
 app.UseCors("AllowAngularClient");
+
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 
-
-
 app.MapControllers();
-
 app.Run();
