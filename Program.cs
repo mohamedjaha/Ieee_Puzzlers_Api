@@ -89,11 +89,14 @@ using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
     var db = services.GetRequiredService<AppDbContext>();
-    try
+  try
+{
+    // 🔒 In production, assume DB already exists and is migrated
+    if (db.Database.CanConnect())
     {
-        db.Database.Migrate();
+        Console.WriteLine("✅ Connected successfully to the existing database.");
 
-        // ✅ STEP 2: Create default role and admin user
+        // ✅ Optional: seed roles and admin user if they don’t exist
         var userManager = services.GetRequiredService<UserManager<User>>();
         var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
 
@@ -113,10 +116,15 @@ using (var scope = app.Services.CreateScope())
                 await userManager.AddToRoleAsync(user, roleName);
         }
     }
-    catch (Exception ex)
+    else
     {
-        Console.WriteLine("❌ Database migration or seeding failed: " + ex.Message);
+        Console.WriteLine("⚠️ Warning: cannot connect to the database. Check connection string or credentials.");
     }
+}
+catch (Exception ex)
+{
+    Console.WriteLine("❌ Database initialization failed: " + ex.Message);
+}
 }
 
 // Swagger UI only in development
