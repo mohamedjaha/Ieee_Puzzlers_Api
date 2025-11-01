@@ -1,5 +1,7 @@
 using System;
+using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using IEEE_Application.DATA;
 using IEEE_Application.DATA.Models;
@@ -14,26 +16,25 @@ using Microsoft.IdentityModel.Tokens;
 var builder = WebApplication.CreateBuilder(args);
 
 // -------------------------------------------------------
-// ✅ SERVICES CONFIGURATION
+// ✅ SERVICE CONFIGURATION
 // -------------------------------------------------------
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// ✅ CORS — allow Angular frontend
+// ✅ CORS (Allow all origins for now — change later for production)
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAngularClient", policy =>
     {
-        policy
-            .AllowAnyOrigin()
-            .AllowAnyHeader()
-            .AllowAnyMethod();
+        policy.AllowAnyOrigin()
+              .AllowAnyHeader()
+              .AllowAnyMethod();
     });
 });
 
-// ✅ Database
+// ✅ Database context
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
@@ -48,6 +49,7 @@ builder.Services.AddIdentity<User, IdentityRole>()
     .AddEntityFrameworkStores<AppDbContext>()
     .AddDefaultTokenProviders();
 
+// ✅ Prevent redirect loops (API-friendly status codes)
 builder.Services.ConfigureApplicationCookie(options =>
 {
     options.Events.OnRedirectToLogin = context =>
@@ -65,7 +67,8 @@ builder.Services.ConfigureApplicationCookie(options =>
 // ✅ JWT Authentication
 var jwtIssuer = builder.Configuration["JWT:Issuer"] ?? "https://puzzlers-api";
 var jwtAudience = builder.Configuration["JWT:Audience"];
-var jwtSecret = builder.Configuration["JWT:SecretKey"] ?? throw new InvalidOperationException("JWT:SecretKey is not configured.");
+var jwtSecret = builder.Configuration["JWT:SecretKey"]
+    ?? throw new InvalidOperationException("JWT:SecretKey is not configured.");
 var validateAudience = !string.IsNullOrWhiteSpace(jwtAudience);
 
 builder.Services.AddAuthentication(options =>
@@ -96,12 +99,13 @@ builder.Services.AddAuthentication(options =>
 var app = builder.Build();
 
 // -------------------------------------------------------
-// ✅ INITIAL DB CHECK (optional retry loop)
+// ✅ INITIAL DATABASE CHECK + MIGRATIONS + SEED
 // -------------------------------------------------------
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
     var db = services.GetRequiredService<AppDbContext>();
+
     try
     {
         int retries = 0;
@@ -119,6 +123,12 @@ using (var scope = app.Services.CreateScope())
         {
             Console.WriteLine("✅ Connected successfully to the existing database.");
 
+            // 🚀 Apply migrations
+            Console.WriteLine("🔄 Applying database migrations...");
+            db.Database.Migrate();
+            Console.WriteLine("✅ Migrations applied successfully.");
+
+            // 🧩 Seed admin role & user
             var userManager = services.GetRequiredService<UserManager<User>>();
             var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
 
@@ -127,7 +137,11 @@ using (var scope = app.Services.CreateScope())
             string password = "Root123?";
 
             if (!await roleManager.RoleExistsAsync(roleName))
-                await roleManager.CreateAsync(new IdentityRole(roleName));
+            {
+                var roleResult = await roleManager.CreateAsync(new IdentityRole(roleName));
+                if (roleResult.Succeeded)
+                    Console.WriteLine($"✅ Role '{roleName}' created.");
+            }
 
             var user = await userManager.FindByNameAsync(userName);
             if (user == null)
@@ -135,12 +149,23 @@ using (var scope = app.Services.CreateScope())
                 user = new User { UserName = userName, Email = "root@example.com" };
                 var result = await userManager.CreateAsync(user, password);
                 if (result.Succeeded)
+                {
                     await userManager.AddToRoleAsync(user, roleName);
+                    Console.WriteLine($"✅ Admin user '{userName}' created and assigned to '{roleName}'.");
+                }
+                else
+                {
+                    Console.WriteLine($"⚠️ Failed to create admin user: {string.Join(", ", result.Errors.Select(e => e.Description))}");
+                }
+            }
+            else
+            {
+                Console.WriteLine("ℹ️ Admin user already exists.");
             }
         }
         else
         {
-            Console.WriteLine("❌ Could not connect to DB after several attempts.");
+            Console.WriteLine("❌ Could not connect to the database after several attempts. Check credentials or network.");
         }
     }
     catch (Exception ex)
@@ -150,10 +175,9 @@ using (var scope = app.Services.CreateScope())
 }
 
 // -------------------------------------------------------
-// ✅ MIDDLEWARE ORDER (IMPORTANT!)
+// ✅ MIDDLEWARE PIPELINE (order matters!)
 // -------------------------------------------------------
 
-// ⚙️ Enable Swagger only in development
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -163,7 +187,7 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-// ✅ Enable CORS BEFORE authentication/authorization
+// 🔑 CORS must come before Authentication
 app.UseCors("AllowAngularClient");
 
 app.UseHttpsRedirection();
