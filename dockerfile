@@ -21,7 +21,7 @@ WORKDIR /app
 COPY --from=build /app/publish .
 
 # Set environment to production
-ENV ASPNETCORE_ENVIRONMENT=Development
+ENV ASPNETCORE_ENVIRONMENT=production
 ENV ASPNETCORE_URLS=http://+:5000
 
 # Expose port

@@ -10,7 +10,6 @@ namespace IEEE_Application.Hubs
         private readonly UserService _userService;
         private static readonly object _winnerLock = new object();
         private static bool _winnerDeclared = false;
-
         public ComunicationHub(Manager manager , UserService userService)
         {
             _manager = manager;
